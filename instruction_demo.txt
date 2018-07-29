@@ -1,0 +1,20 @@
+Instruction:
+=================================================================================================
+=                                 Setup Environment                                             =
+=================================================================================================
+Lab Description:
+VMName:			                Machine name:             Roles:			      IP Address:         Public IP Address:
+ip-10-21-1-107              ip-10-21-1-107             Master           10.21.1.107         13-229-205-145
+ip-10-21-1-164              ip-10-21-1-170             Worker1			    10.21.1.164         54.169.158.2
+ip-10-21-1-213              ip-10-21-1-213             Worker2			    10.21.1.213         54.251.188.165
+ip-10-21-1-97               ip-10-21-1-97              Worker3			    10.21.1.97          52.221.180.115
+=================================================================================================
+Device Disk on device: /dev/xvdg on Worker 1/2/3
+
+1. Create StorageClass for Dynamic Provision:
+kubectl get svc
+vi Storageclass.yaml  ==> Add ip address of heketi server
+kubectl create -f Storageclass.yaml
+kubectl get sc
+
+2. Create 

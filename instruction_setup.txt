@@ -1,0 +1,299 @@
+Instruction:
+=================================================================================================
+=                                 Setup Environment                                             =
+=================================================================================================
+Lab Description:
+VMName:			                Machine name:             Roles:			      IP Address:         Public IP Address:
+ip-10-21-1-33               ip-10-21-1-33              Master           10.21.1.33          13.250.101.110
+ip-10-21-1-106              ip-10-21-1-106             Worker1			    10.21.1.106         18.136.101.96
+ip-10-21-1-17               ip-10-21-1-17              Worker2			    10.21.1.17          13.250.111.121
+ip-10-21-1-210              ip-10-21-1-210             Worker3			    10.21.1.210         52.77.244.199
+=================================================================================================
+
+################################################################# Kubernetes Setup ###############################################################################
+1. (Master) Init kubernetes master
+sudo su -
+swapoff -a 
+kubeadm init --kubernetes-version=v1.9.2 --pod-network-cidr=192.168.0.0/16 --apiserver-cert-extra-sans <public ip>
+exit
+
+----Result (Example)----
+  kubeadm join --token 21d667.1bac92c0eaa5cfcd 10.21.1.107:6443 --discovery-token-ca-cert-hash sha256:410a6ee5859c0bcd29a9fdd4317c6d1e467797a4aa7b0927becb11a7a5ddb6fb
+---------------------
+
+2. (Master) Setup run cluster system by command (Regular User):
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+kubectl taint nodes --all node-role.kubernetes.io/master-
+
+3. (local) SCP Certificate from Google Cloud to Local:
+scp -i <pem file> ubuntu@<Public IP>:/home/ubuntu/.kube/config adminconfig.conf
+
+4. (Master) Create calico net plugin for network for cluster by command:
+	kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml
+
+5. (Master) Check master readiness and dns by command (Take 5 - 10 min):
+	watch kubectl get pods --all-namespaces
+
+6. (Master) Install dashboard by command:
+git clone https://github.com/kubernetes-incubator/metrics-server.git
+cd metrics-server/
+kubectl create -f deploy/1.8+/
+watch kubectl get pods --all-namespaces
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+kubectl create clusterrolebinding insecure-dashboard --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
+watch kubectl get pods --all-namespaces
+
+7. (local) Configure local kubectl for access and command cluster:
+kubectl --kubeconfig ./adminconfig.conf get nodes
+kubectl --kubeconfig ./adminconfig.conf get svc
+
+8. (local) Open dashboard by command:
+kubectl --kubeconfig ./adminconfig.conf proxy --accept-hosts '.*'
+
+9. (local) Open browser by command
+http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/
+
+10. (Worker1, Worker2, Worker3) ssh and join to cluster by command:
+sudo su -
+swapoff -a
+kubeadm join --token 39459a.2ed10164b692cee1 10.21.1.147:6443 --discovery-token-ca-cert-hash sha256:830e4c6518f5dc981339f8377e0ba75b12e5c7117b7856131e6c2ed36cc81623
+exit
+
+11. (Master) Check Node in Cluster by command (This take 5 - 10 min):
+watch kubectl get nodes
+
+
+12. (Master)Check Pods from all cluster system running by command:
+watch kubectl get pods --all-namespaces
+
+
+################################################################# Gluster/Heketi Setup ###############################################################################
+0. Check kernel load module by command:
+sudo modprobe dm_snapshot       ==> Check by "sudo lsmod |grep dm_snapshot"
+sudo modprobe dm_mirror         ==> Check by "sudo lsmod |grep dm_mirror"
+sudo modprobe dm_thin_pool      ==> Check by "sudo lsmod |grep dm_thin_pool"
+
+Device Disk on device: /dev/xvdg on Worker 1/2/3
+
+1. (All Node) Setup Gluster Client by Command:
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository ppa:gluster/glusterfs-4.0
+sudo apt-get install -y glusterfs-client
+
+2. (Master) Git Clone repository
+
+git clone https://github.com/gluster/gluster-kubernetes.git
+cd gluster-kubernetes/
+
+3. (Master) Create Topology for Operate (Example)
+vi topology.json
+cp topology.json /home/ubuntu/gluster-kubernetes/deploy/
+{
+  "clusters": [
+    {
+      "nodes": [
+        {
+          "node": {
+            "hostnames": {
+              "manage": [
+                "ip-10-21-1-170"
+              ],
+              "storage": [
+                "10.21.1.170"
+              ]
+            },
+            "zone": 1
+          },
+          "devices": [
+            "/dev/xvdg"
+          ]
+        },
+        {
+          "node": {
+            "hostnames": {
+              "manage": [
+                "ip-10-21-1-232"
+              ],
+              "storage": [
+                "10.21.1.232"
+              ]
+            },
+            "zone": 1
+          },
+          "devices": [
+            "/dev/xvdg"
+          ]
+        },
+        {
+          "node": {
+            "hostnames": {
+              "manage": [
+                "ip-10-21-1-216"
+              ],
+              "storage": [
+                "10.21.1.216"
+              ]
+            },
+            "zone": 1
+          },
+          "devices": [
+            "/dev/xvdg"
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+5. Operate gk-cluster by command:
+sudo chmod +x ./gk-deploy
+sudo ./gk-deploy -g
+======================================================================================================================================
+ubuntu@ip-10-21-1-246:~/gluster-kubernetes/deploy$ ./gk-deploy -g
+Welcome to the deployment tool for GlusterFS on Kubernetes and OpenShift.
+
+Before getting started, this script has some requirements of the execution
+environment and of the container platform that you should verify.
+
+The client machine that will run this script must have:
+ * Administrative access to an existing Kubernetes or OpenShift cluster
+ * Access to a python interpreter 'python'
+
+Each of the nodes that will host GlusterFS must also have appropriate firewall
+rules for the required GlusterFS ports:
+ * 2222  - sshd (if running GlusterFS in a pod)
+ * 24007 - GlusterFS Management
+ * 24008 - GlusterFS RDMA
+ * 49152 to 49251 - Each brick for every volume on the host requires its own
+   port. For every new brick, one new port will be used starting at 49152. We
+   recommend a default range of 49152-49251 on each host, though you can adjust
+   this to fit your needs.
+
+The following kernel modules must be loaded:
+ * dm_snapshot
+ * dm_mirror
+ * dm_thin_pool
+
+For systems with SELinux, the following settings need to be considered:
+ * virt_sandbox_use_fusefs should be enabled on each node to allow writing to
+   remote GlusterFS volumes
+
+In addition, for an OpenShift deployment you must:
+ * Have 'cluster_admin' role on the administrative account doing the deployment
+ * Add the 'default' and 'router' Service Accounts to the 'privileged' SCC
+ * Have a router deployed that is configured to allow apps to access services
+   running in the cluster
+
+Do you wish to proceed with deployment?
+
+[Y]es, [N]o? [Default: Y]: Y 
+Using Kubernetes CLI.
+Using namespace "default".
+Checking for pre-existing resources...
+  GlusterFS pods ... not found.
+  deploy-heketi pod ... not found.
+  heketi pod ... not found.
+  gluster-s3 pod ... not found.
+Creating initial resources ... serviceaccount "heketi-service-account" created
+clusterrolebinding "heketi-sa-view" created
+clusterrolebinding "heketi-sa-view" labeled
+OK
+node "ip-10-21-1-170" labeled
+node "ip-10-21-1-232" labeled
+node "ip-10-21-1-216" labeled
+daemonset "glusterfs" created
+Waiting for GlusterFS pods to start ... OK
+secret "heketi-config-secret" created
+secret "heketi-config-secret" labeled
+service "deploy-heketi" created
+deployment "deploy-heketi" created
+Waiting for deploy-heketi pod to start ... OK
+Creating cluster ... ID: 284a58c78c93911497d759c6dd5875e3
+Allowing file volumes on cluster.
+Allowing block volumes on cluster.
+Creating node ip-10-21-1-170 ... ID: fb840adefec4178cfbf706dda8a7bbf0
+Adding device /dev/xvdg ... OK
+Creating node ip-10-21-1-232 ... ID: 05b07c3a8b509b3b1324df58f16269a4
+Adding device /dev/xvdg ... OK
+Creating node ip-10-21-1-216 ... ID: f4233961decbc803da84417f1cf83e48
+Adding device /dev/xvdg ... OK
+heketi topology loaded.
+Saving /tmp/heketi-storage.json
+secret "heketi-storage-secret" created
+endpoints "heketi-storage-endpoints" created
+service "heketi-storage-endpoints" created
+job "heketi-storage-copy-job" created
+
+======================================================================================================================================
+
+6. (Master) Setup Heketi Cli:
+   Heketi Setup
+   wget https://github.com/heketi/heketi/releases/download/v7.0.0/heketi-v7.0.0.linux.amd64.tar.gz
+   tar xzvf heketi-v7.0.0.linux.amd64.tar.gz
+   cd heketi
+   sudo cp heketi-cli /usr/local/bin/
+  
+
+7. (Master) Test Heketi-Cli by command:
+ Test the service
+  curl http://<cluster-ip>:8080/hello
+  heketi-cli -s http://<cluster-ip>:8080 cluster list
+  export HEKETI_CLI_SERVER=http://<address to heketi service>:8080
+
+ Test create volume
+  heketi-cli cluster list
+  heketi-cli cluster info <cluster id>
+  heketi-cli node info <node id>
+  heketi-cli volume create --size=2
+  heketi-cli volume list
+  heketi-cli volume info <volume id>
+  heketi-cli volume delete <volume id>
+
+8. (Master) Test create stroage class for claim glusterfs volume by command:
+
+Dynamically Provision a Volume
+   Create a StorageClass 
+   # vi glusterfs-storageclass.yaml ==> add cluster ip of heketi server
+
+   # kubectl create -f Storageclass.yaml
+
+   # kubectl get sc
+
+   Create a PersistentVolumeClaim (PVC)
+   
+   # kubectl create -f gluster-pvc.yaml
+
+   # kubectl get pvc
+
+   # kubectl get pv
+
+  (Master)
+  export HEKETI_CLI_SERVER=http://<address to heketi service>:8080
+  heketi-cli volume list
+  
+Create a NGINX pod that uses the PVC
+   # kubectl create -f nginx.yaml
+
+   # kubectl get pods -o wide
+
+   exec into the container and create an index.html file
+   # kubectl exec -ti nginx-pod1 /bin/sh
+   $ cd /usr/share/nginx/html
+   $ echo 'Hello World from GlusterFS!!!' > index.html
+   $ ls
+   index.html
+   $ exit
+
+   # curl http://<ip of pods>
+   Hello World from GlusterFS!!!
+
+
+9. (Master) Clean Up lab
+kubectl delete -f nginx.yaml
+kubectl delete -f gluster-pvc.yaml
+kubectl delete -f Storageclass.yaml
+
+
