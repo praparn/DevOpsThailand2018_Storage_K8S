@@ -87,13 +87,11 @@ sudo add-apt-repository ppa:gluster/glusterfs-4.0
 sudo apt-get install -y glusterfs-client
 
 2. (Master) Git Clone repository
-git clone https://github.com/praparn/DevOpsThailand2018_Storage_K8S.git   ==> This is source
+git clone https://github.com/praparn/DevOpsThailand2018_Storage_K8S.git   ==> This is source for all lab
 git clone https://github.com/gluster/gluster-kubernetes.git
-cd gluster-kubernetes/
 
-3. (Master) Create Topology for Operate (Example)
-vi topology.json
-cp topology.json /home/ubuntu/gluster-kubernetes/deploy/
+3. (Master) Edit topology.json and copy
+vi ./DevOpsThailand2018_Storage_K8S/topology.json     ==> Change all hostname/ip address to actual host 1, 2, 3
 {
   "clusters": [
     {
@@ -150,9 +148,14 @@ cp topology.json /home/ubuntu/gluster-kubernetes/deploy/
     }
   ]
 }
+cp ./DevOpsThailand2018_Storage_K8S/topology.json ./gluster-kubernetes/deploy/topology.json
 
-5. Operate gk-cluster by command:
+
+4. (Master) Access to deployment and chmod for execute to "gk-deploy"
+cd ./gluster-kubernetes/deploy/
 sudo chmod +x ./gk-deploy
+
+5. (Master) Operate gk-cluster by command:
 sudo ./gk-deploy -g
 ======================================================================================================================================
 ubuntu@ip-10-21-1-246:~/gluster-kubernetes/deploy$ ./gk-deploy -g
@@ -238,9 +241,13 @@ job "heketi-storage-copy-job" created
    tar xzvf heketi-v7.0.0.linux.amd64.tar.gz
    cd heketi
    sudo cp heketi-cli /usr/local/bin/
+   cd ..
   
 
 7. (Master) Test Heketi-Cli by command:
+  kubectl get pods
+  kubectl get svc
+
  Test the service
   curl http://<cluster-ip>:8080/hello
   heketi-cli -s http://<cluster-ip>:8080 cluster list
@@ -256,10 +263,9 @@ job "heketi-storage-copy-job" created
   heketi-cli volume delete <volume id>
 
 8. (Master) Test create stroage class for claim glusterfs volume by command:
-
 Dynamically Provision a Volume
    Create a StorageClass 
-   # vi glusterfs-storageclass.yaml ==> add cluster ip of heketi server
+   # cd ./DevOpsThailand2018_Storage_K8S/ && vi Storageclass.yaml ==> add cluster ip of heketi server
 
    # kubectl create -f Storageclass.yaml
 

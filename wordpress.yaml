@@ -8,7 +8,7 @@ spec:
   ports:
     - port: 80
       targetPort: 80
-      nodePort: 32800
+      nodePort: 31000
   selector:
     app: wordpress
     tier: frontend
