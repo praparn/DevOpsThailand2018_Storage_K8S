@@ -4,10 +4,10 @@ Instruction:
 =================================================================================================
 Lab Description:
 VMName:			                Machine name:             Roles:			      IP Address:         Public IP Address:
-ip-10-21-1-33               ip-10-21-1-33              Master           10.21.1.33          13.250.101.110
-ip-10-21-1-106              ip-10-21-1-106             Worker1			    10.21.1.106         18.136.101.96
-ip-10-21-1-17               ip-10-21-1-17              Worker2			    10.21.1.17          13.250.111.121
-ip-10-21-1-210              ip-10-21-1-210             Worker3			    10.21.1.210         52.77.244.199
+ip-10-21-1-158              ip-10-21-1-158             Master           10.21.1.158         13.229.105.134
+ip-10-21-1-130              ip-10-21-1-130             Worker1			    10.21.1.130         54.169.188.171
+ip-10-21-1-210              ip-10-21-1-210             Worker2			    10.21.1.210         13.250.112.154
+ip-10-21-1-242              ip-10-21-1-242             Worker3			    10.21.1.242         13.229.129.183
 =================================================================================================
 
 ################################################################# Kubernetes Setup ###############################################################################
@@ -43,6 +43,9 @@ kubectl create -f deploy/1.8+/
 watch kubectl get pods --all-namespaces
 
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+kubectl apply -f https://github.com/kubernetes/heapster/raw/master/deploy/kube-config/rbac/heapster-rbac.yaml
+kubectl apply -f https://github.com/kubernetes/heapster/raw/master/deploy/kube-config/influxdb/heapster.yaml
+kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_20180701/master/WorkShop_2.5_Kubernetes_RealWorld/influxdb.yaml
 kubectl create clusterrolebinding insecure-dashboard --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
 watch kubectl get pods --all-namespaces
 
@@ -68,7 +71,7 @@ watch kubectl get nodes
 
 12. (Master)Check Pods from all cluster system running by command:
 watch kubectl get pods --all-namespaces
-
+kubectl taint nodes <master nodes> dedicate=master:NoSchedule
 
 ################################################################# Gluster/Heketi Setup ###############################################################################
 0. Check kernel load module by command:
@@ -84,7 +87,7 @@ sudo add-apt-repository ppa:gluster/glusterfs-4.0
 sudo apt-get install -y glusterfs-client
 
 2. (Master) Git Clone repository
-
+git clone https://github.com/praparn/DevOpsThailand2018_Storage_K8S.git   ==> This is source
 git clone https://github.com/gluster/gluster-kubernetes.git
 cd gluster-kubernetes/
 
