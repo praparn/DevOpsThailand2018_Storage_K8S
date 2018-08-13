@@ -13,8 +13,9 @@ Setup GlusterFS:
 	Following "instruction_setup.txt" for operate. This base on https://github.com/gluster/gluster-kubernetes
 
 Demo Wordpress:
-	1. Create Etcd cluster: etcd-cluster.yaml
 
-	2. Create Galara Mariadb: galeramariadb.yaml
-	
-        3. Create Wordpress with 10 Replicas: wordpress.yaml       
+1. Create Etcd cluster: etcd-cluster.yaml
+
+2. Create Galara Mariadb: galeramariadb.yaml
+
+3. Create Wordpress with 10 Replicas: wordpress.yaml       
