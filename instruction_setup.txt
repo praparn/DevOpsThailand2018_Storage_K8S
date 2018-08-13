@@ -1,87 +1,20 @@
-Instruction:
-=================================================================================================
-=                                 Setup Environment                                             =
-=================================================================================================
-Lab Description:
-VMName:			                Machine name:             Roles:			      IP Address:         Public IP Address:
-ip-10-21-1-158              ip-10-21-1-158             Master           10.21.1.158         13.229.105.134
-ip-10-21-1-130              ip-10-21-1-130             Worker1			    10.21.1.130         54.169.188.171
-ip-10-21-1-210              ip-10-21-1-210             Worker2			    10.21.1.210         13.250.112.154
-ip-10-21-1-242              ip-10-21-1-242             Worker3			    10.21.1.242         13.229.129.183
-=================================================================================================
-
-################################################################# Kubernetes Setup ###############################################################################
-1. (Master) Init kubernetes master
-sudo su -
-swapoff -a 
-kubeadm init --kubernetes-version=v1.9.2 --pod-network-cidr=192.168.0.0/16 --apiserver-cert-extra-sans <public ip>
-exit
-
-----Result (Example)----
-  kubeadm join --token 21d667.1bac92c0eaa5cfcd 10.21.1.107:6443 --discovery-token-ca-cert-hash sha256:410a6ee5859c0bcd29a9fdd4317c6d1e467797a4aa7b0927becb11a7a5ddb6fb
----------------------
-
-2. (Master) Setup run cluster system by command (Regular User):
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-kubectl taint nodes --all node-role.kubernetes.io/master-
-
-3. (local) SCP Certificate from Google Cloud to Local:
-scp -i <pem file> ubuntu@<Public IP>:/home/ubuntu/.kube/config adminconfig.conf
-
-4. (Master) Create calico net plugin for network for cluster by command:
-	kubectl apply -f https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml
-
-5. (Master) Check master readiness and dns by command (Take 5 - 10 min):
-	watch kubectl get pods --all-namespaces
-
-6. (Master) Install dashboard by command:
-git clone https://github.com/kubernetes-incubator/metrics-server.git
-cd metrics-server/
-kubectl create -f deploy/1.8+/
-watch kubectl get pods --all-namespaces
-
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
-kubectl apply -f https://github.com/kubernetes/heapster/raw/master/deploy/kube-config/rbac/heapster-rbac.yaml
-kubectl apply -f https://github.com/kubernetes/heapster/raw/master/deploy/kube-config/influxdb/heapster.yaml
-kubectl apply -f https://raw.githubusercontent.com/praparn/kubernetes_20180701/master/WorkShop_2.5_Kubernetes_RealWorld/influxdb.yaml
-kubectl create clusterrolebinding insecure-dashboard --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
-watch kubectl get pods --all-namespaces
-
-7. (local) Configure local kubectl for access and command cluster:
-kubectl --kubeconfig ./adminconfig.conf get nodes
-kubectl --kubeconfig ./adminconfig.conf get svc
-
-8. (local) Open dashboard by command:
-kubectl --kubeconfig ./adminconfig.conf proxy --accept-hosts '.*'
-
-9. (local) Open browser by command
-http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/
-
-10. (Worker1, Worker2, Worker3) ssh and join to cluster by command:
-sudo su -
-swapoff -a
-kubeadm join --token 39459a.2ed10164b692cee1 10.21.1.147:6443 --discovery-token-ca-cert-hash sha256:830e4c6518f5dc981339f8377e0ba75b12e5c7117b7856131e6c2ed36cc81623
-exit
-
-11. (Master) Check Node in Cluster by command (This take 5 - 10 min):
-watch kubectl get nodes
-
-
-12. (Master)Check Pods from all cluster system running by command:
-watch kubectl get pods --all-namespaces
-kubectl taint nodes <master nodes> dedicate=master:NoSchedule
-
+Instruction for Setup Heketi/Gluster (Assumption: Kubernetes Cluster Already Provide)
+====================================================
+Environment Description: 
+NAME             STATUS    ROLES     AGE       VERSION
+ip-10-21-1-128   Ready     master    13m       v1.11.2
+ip-10-21-1-188   Ready     <none>    1m        v1.11.2
+ip-10-21-1-27    Ready     <none>    2m        v1.11.2
+ip-10-21-1-68    Ready     <none>    5m        v1.11.2
+===================================================
 ################################################################# Gluster/Heketi Setup ###############################################################################
-0. Check kernel load module by command:
+0. (All Worker Node) Install kernel load module by command:
 sudo modprobe dm_snapshot       ==> Check by "sudo lsmod |grep dm_snapshot"
 sudo modprobe dm_mirror         ==> Check by "sudo lsmod |grep dm_mirror"
 sudo modprobe dm_thin_pool      ==> Check by "sudo lsmod |grep dm_thin_pool"
 
 Device Disk on device: /dev/xvdg on Worker 1/2/3
-
-1. (All Node) Setup Gluster Client by Command:
+1. (All Worker Node) Setup Gluster Client by Command:
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository ppa:gluster/glusterfs-4.0
 sudo apt-get install -y glusterfs-client
@@ -100,10 +33,10 @@ vi ./DevOpsThailand2018_Storage_K8S/topology.json     ==> Change all hostname/ip
           "node": {
             "hostnames": {
               "manage": [
-                "ip-10-21-1-170"
+                "ip-10-21-1-68"
               ],
               "storage": [
-                "10.21.1.170"
+                "10.21.1.68"
               ]
             },
             "zone": 1
@@ -116,10 +49,10 @@ vi ./DevOpsThailand2018_Storage_K8S/topology.json     ==> Change all hostname/ip
           "node": {
             "hostnames": {
               "manage": [
-                "ip-10-21-1-232"
+                "ip-10-21-1-27"
               ],
               "storage": [
-                "10.21.1.232"
+                "10.21.1.27"
               ]
             },
             "zone": 1
@@ -132,10 +65,10 @@ vi ./DevOpsThailand2018_Storage_K8S/topology.json     ==> Change all hostname/ip
           "node": {
             "hostnames": {
               "manage": [
-                "ip-10-21-1-216"
+                "ip-10-21-1-188"
               ],
               "storage": [
-                "10.21.1.216"
+                "10.21.1.188"
               ]
             },
             "zone": 1
@@ -151,14 +84,16 @@ vi ./DevOpsThailand2018_Storage_K8S/topology.json     ==> Change all hostname/ip
 cp ./DevOpsThailand2018_Storage_K8S/topology.json ./gluster-kubernetes/deploy/topology.json
 
 
-4. (Master) Access to deployment and chmod for execute to "gk-deploy"
+4. (Master) Access to deployment and chmod for execute to "gk-deploy" 
 cd ./gluster-kubernetes/deploy/
 sudo chmod +x ./gk-deploy
 
-5. (Master) Operate gk-cluster by command:
-sudo ./gk-deploy -g
+5. (Master) Update python binary and Operate gk-cluster by command:
+sudo apt-get update
+sudo apt install -y python-minimal
+sudo ./gk-deploy -g 
 ======================================================================================================================================
-ubuntu@ip-10-21-1-246:~/gluster-kubernetes/deploy$ ./gk-deploy -g
+ubuntu@iip-10-21-1-128:~/gluster-kubernetes/deploy$ ./gk-deploy -g
 Welcome to the deployment tool for GlusterFS on Kubernetes and OpenShift.
 
 Before getting started, this script has some requirements of the execution
@@ -263,6 +198,9 @@ job "heketi-storage-copy-job" created
   heketi-cli volume delete <volume id>
 
 8. (Master) Test create stroage class for claim glusterfs volume by command:
+Taint master node:
+kubectl taint nodes <Master Name> dedicated=admin:NoSchedule
+
 Dynamically Provision a Volume
    Create a StorageClass 
    # cd ./DevOpsThailand2018_Storage_K8S/ && vi Storageclass.yaml ==> add cluster ip of heketi server
@@ -306,3 +244,8 @@ kubectl delete -f gluster-pvc.yaml
 kubectl delete -f Storageclass.yaml
 
 
+==============================================================Install prometheus monitoring===========================================================================
+
+git clone https://github.com/camilb/prometheus-kubernetes.git
+cd prometheus-kubernetes
+./deploy
