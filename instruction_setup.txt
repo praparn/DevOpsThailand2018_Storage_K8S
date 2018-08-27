@@ -2,10 +2,10 @@ Instruction for Setup Heketi/Gluster (Assumption: Kubernetes Cluster Already Pro
 ====================================================
 Environment Description: 
 NAME             STATUS    ROLES     AGE       VERSION
-ip-10-21-1-128   Ready     master    13m       v1.11.2
-ip-10-21-1-188   Ready     <none>    1m        v1.11.2
-ip-10-21-1-27    Ready     <none>    2m        v1.11.2
-ip-10-21-1-68    Ready     <none>    5m        v1.11.2
+ip-10-21-1-102   Ready     <none>    1m        v1.11.2
+ip-10-21-1-136   Ready     <none>    2m        v1.11.2
+ip-10-21-1-193   Ready     master    7m        v1.11.2
+ip-10-21-1-92    Ready     <none>    1m        v1.11.2
 ===================================================
 ################################################################# Gluster/Heketi Setup ###############################################################################
 0. (All Worker Node) Install kernel load module by command:
@@ -16,7 +16,7 @@ sudo modprobe dm_thin_pool      ==> Check by "sudo lsmod |grep dm_thin_pool"
 Device Disk on device: /dev/xvdg on Worker 1/2/3
 1. (All Worker Node) Setup Gluster Client by Command:
 sudo apt-get install -y software-properties-common
-sudo add-apt-repository ppa:gluster/glusterfs-4.0
+sudo add-apt-repository -y ppa:gluster/glusterfs-4.0
 sudo apt-get install -y glusterfs-client
 
 2. (Master) Git Clone repository

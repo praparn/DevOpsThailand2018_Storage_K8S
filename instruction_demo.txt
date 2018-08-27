@@ -4,10 +4,10 @@ Instruction:
 =================================================================================================
 Environment Description:
 NAME             STATUS    ROLES     AGE       VERSION
-ip-10-21-1-128   Ready     master    13m       v1.11.2
-ip-10-21-1-188   Ready     <none>    1m        v1.11.2
-ip-10-21-1-27    Ready     <none>    2m        v1.11.2
-ip-10-21-1-68    Ready     <none>    5m        v1.11.2
+ip-10-21-1-139   Ready     master    42m       v1.11.2  ==> Public IP Address:13.229.134.66
+ip-10-21-1-165   Ready     <none>    36m       v1.11.2  ==> Public IP Address:13.229.247.142
+ip-10-21-1-208   Ready     <none>    36m       v1.11.2  ==> Public IP Address:52.221.198.173
+ip-10-21-1-211   Ready     <none>    36m       v1.11.2  ==> Public IP Address:13.250.14.213
 =================================================================================================
 All activity will operate on Master Node
 
@@ -22,7 +22,7 @@ kubectl get sc
 kubectl create -f etcd-cluster.yaml
 watch kubectl get pods -o wide
 watch kubectl get svc
-
+ 
 3. Create Galera Cluster MariaDB by command: (5 - 10 min)
 kubectl create -f galeramariadb.yaml
 watch kubectl get pods -o wide
