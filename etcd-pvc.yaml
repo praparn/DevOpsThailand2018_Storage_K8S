@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+   name: etcd0-pvc
+   labels:
+     app: etcd0-pvc
+   annotations:
+     volume.beta.kubernetes.io/storage-class: glusterfs-heketi
+spec:
+   accessModes:
+      - ReadWriteOnce
+   resources:
+      requests:
+         storage: 5Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+   name: etcd1-pvc
+   labels:
+     app: etcd1-pvc
+   annotations:
+     volume.beta.kubernetes.io/storage-class: glusterfs-heketi
+spec:
+   accessModes:
+      - ReadWriteOnce
+   resources:
+      requests:
+         storage: 5Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+   name: etcd2-pvc
+   labels:
+     app: etcd2-pvc
+   annotations:
+     volume.beta.kubernetes.io/storage-class: glusterfs-heketi
+spec:
+   accessModes:
+      - ReadWriteOnce
+   resources:
+      requests:
+         storage: 5Gi

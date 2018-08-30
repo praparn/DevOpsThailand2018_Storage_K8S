@@ -4,10 +4,10 @@ Instruction:
 =================================================================================================
 Environment Description:
 NAME             STATUS    ROLES     AGE       VERSION
-ip-10-21-1-139   Ready     master    42m       v1.11.2  ==> Public IP Address:13.229.134.66
-ip-10-21-1-165   Ready     <none>    36m       v1.11.2  ==> Public IP Address:13.229.247.142
-ip-10-21-1-208   Ready     <none>    36m       v1.11.2  ==> Public IP Address:52.221.198.173
-ip-10-21-1-211   Ready     <none>    36m       v1.11.2  ==> Public IP Address:13.250.14.213
+ip-10-21-1-32     Ready     master    7m        v1.11.2     ==> This is Master (54.169.124.132)
+ip-10-21-1-52     Ready     <none>    1m        v1.11.2     ==> This is Worker1 (13.229.251.47)
+ip-10-21-1-128    Ready     <none>    2m        v1.11.2     ==> This is Worker2 (13.250.113.59)
+ip-10-21-1-95     Ready     <none>    1m        v1.11.2     ==> This is Worker3 (13.229.224.44)
 =================================================================================================
 All activity will operate on Master Node
 
@@ -19,7 +19,7 @@ kubectl create -f Storageclass.yaml
 kubectl get sc
 
 2. Create Etcd Cluster for Discovery Service:
-kubectl create -f etcd-cluster.yaml
+kubectl create -f etcd-cluster.yaml 
 watch kubectl get pods -o wide
 watch kubectl get svc
  

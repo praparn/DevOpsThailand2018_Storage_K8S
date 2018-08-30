@@ -2,10 +2,10 @@ Instruction for Setup Heketi/Gluster (Assumption: Kubernetes Cluster Already Pro
 ====================================================
 Environment Description: 
 NAME             STATUS    ROLES     AGE       VERSION
-ip-10-21-1-102   Ready     <none>    1m        v1.11.2
-ip-10-21-1-136   Ready     <none>    2m        v1.11.2
-ip-10-21-1-193   Ready     master    7m        v1.11.2
-ip-10-21-1-92    Ready     <none>    1m        v1.11.2
+ip-10-21-1-32     Ready     master    7m        v1.11.2     ==> This is Master
+ip-10-21-1-52     Ready     <none>    1m        v1.11.2     ==> This is Worker1
+ip-10-21-1-128    Ready     <none>    2m        v1.11.2     ==> This is Worker2
+ip-10-21-1-95     Ready     <none>    1m        v1.11.2     ==> This is Worker3
 ===================================================
 ################################################################# Gluster/Heketi Setup ###############################################################################
 0. (All Worker Node) Install kernel load module by command:
@@ -33,10 +33,10 @@ vi ./DevOpsThailand2018_Storage_K8S/topology.json     ==> Change all hostname/ip
           "node": {
             "hostnames": {
               "manage": [
-                "ip-10-21-1-68"
+                "ip-10-21-1-52"
               ],
               "storage": [
-                "10.21.1.68"
+                "10.21.1.52"
               ]
             },
             "zone": 1
@@ -49,10 +49,10 @@ vi ./DevOpsThailand2018_Storage_K8S/topology.json     ==> Change all hostname/ip
           "node": {
             "hostnames": {
               "manage": [
-                "ip-10-21-1-27"
+                "ip-10-21-1-128"
               ],
               "storage": [
-                "10.21.1.27"
+                "10.21.1.128"
               ]
             },
             "zone": 1
@@ -65,10 +65,10 @@ vi ./DevOpsThailand2018_Storage_K8S/topology.json     ==> Change all hostname/ip
           "node": {
             "hostnames": {
               "manage": [
-                "ip-10-21-1-188"
+                "ip-10-21-1-95"
               ],
               "storage": [
-                "10.21.1.188"
+                "10.21.1.95"
               ]
             },
             "zone": 1
