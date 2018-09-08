@@ -1,4 +1,4 @@
-# DevOpsThailand2018_Storage_K8S
+# DevOpsBKK2018_Storage_K8S
 Assumption:
 	1. Kubernetes Farm was configured and setup
         2. Raw disk need to provide on worker node
